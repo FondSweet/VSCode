@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .calculator h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 2.5em;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: right;
+            margin-bottom: 20px;
+            word-wrap: break-word;
+            word-break: break-all;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button.bracket {
+            background: #e8d5f2;
+            color: #764ba2;
+        }
+
+        button.bracket:hover {
+            background: #d4b5e0;
+        }
+
+        button {
+            padding: 20px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: #f0f0f0;
+            color: #333;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        button:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button.operator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        button.operator:hover {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        }
+
+        button.equals {
+            grid-column: span 2;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        button.equals:hover {
+            background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+        }
+
+        button.clear {
+            grid-column: span 2;
+            background: #ff6b6b;
+            color: white;
+        }
+
+        button.clear:hover {
+            background: #ff5252;
+        }
+
+        .error {
+            color: #ff6b6b;
+            font-size: 0.9em;
+            text-align: center;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <h1>Calculator</h1>
+        <div class="display" id="display">0</div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">AC</button>
+            <button class="bracket" onclick="appendOperator('(')">(</button>
+            <button class="bracket" onclick="appendOperator(')')">)</button>
+            <button class="operator" onclick="appendOperator('/')">&divide;</button>
+            
+            <button onclick="appendNumber('7')">7</button>
+            <button onclick="appendNumber('8')">8</button>
+            <button onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="appendOperator('*')">&times;</button>
+            
+            <button onclick="appendNumber('4')">4</button>
+            <button onclick="appendNumber('5')">5</button>
+            <button onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="appendOperator('-')">−</button>
+            
+            <button onclick="appendNumber('1')">1</button>
+            <button onclick="appendNumber('2')">2</button>
+            <button onclick="appendNumber('3')">3</button>
+            <button class="operator" onclick="appendOperator('+')">+</button>
+            
+            <button onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+            <button class="operator" onclick="appendOperator('.')">.</button>
+            <button class="operator" onclick="toggleSign()">±</button>
+            <button class="equals" onclick="calculate()">=</button>
+        </div>
+        <div class="error" id="error"></div>
+    </div>
+
+    <script>
+        let display = document.getElementById('display');
+        let errorDiv = document.getElementById('error');
+        let expression = '';
+
+        function updateDisplay() {
+            display.textContent = expression || '0';
+        }
+
+        function appendNumber(num) {
+            if (num === '.' && expression.includes('.')) return;
+            expression += num;
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (!expression && op !== '(' && op !== '-') return;
+            expression += op;
+            updateDisplay();
+        }
+
+        function toggleSign() {
+            if (expression) {
+                expression = expression.startsWith('-') ? expression.substring(1) : '-' + expression;
+                updateDisplay();
+            }
+        }
+
+        function clearDisplay() {
+            expression = '';
+            errorDiv.textContent = '';
+            updateDisplay();
+        }
+
+        async function calculate() {
+            if (!expression) return;
+
+            try {
+                const response = await fetch('/api/calc', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ expression: expression })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    errorDiv.textContent = data.error;
+                    expression = '';
+                } else {
+                    expression = String(data.result);
+                    errorDiv.textContent = '';
+                }
+                updateDisplay();
+            } catch (err) {
+                errorDiv.textContent = 'Connection error';
+                console.error('Error:', err);
+            }
+        }
+
+        // Allow keyboard input
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
+            if (e.key === '.') appendNumber('.');
+            if (e.key === '+' || e.key === '-' || e.key === '*' || e.key === '/') {
+                e.preventDefault();
+                appendOperator(e.key);
+            }
+            if (e.key === '(' || e.key === ')') {
+                e.preventDefault();
+                appendOperator(e.key);
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                calculate();
+            }
+            if (e.key === 'Escape') clearDisplay();
+            if (e.key === 'Backspace') {
+                expression = expression.slice(0, -1);
+                updateDisplay();
+            }
+        });
+    </script>
+</body>
+</html>
