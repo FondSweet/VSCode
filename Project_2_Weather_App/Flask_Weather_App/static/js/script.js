@@ -112,6 +112,7 @@ function displayHourlyForecast(hourlyData) {
     container.innerHTML = '';
     
     hourlyData.forEach(hour => {
+        const uvDisplay = hour.uv_index !== undefined && hour.uv_index !== null ? hour.uv_index : 'N/A';
         const card = document.createElement('div');
         card.className = 'hourly-card';
         card.innerHTML = `
@@ -121,6 +122,7 @@ function displayHourlyForecast(hourlyData) {
             <div class="hourly-desc">${hour.description}</div>
             <div class="hourly-precip">💧 ${hour.precipitation}mm</div>
             <div class="hourly-wind">💨 ${hour.wind_speed}km/h</div>
+            <div class="hourly-uv">☀️ UV ${uvDisplay}</div>
         `;
         container.appendChild(card);
     });

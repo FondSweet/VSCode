@@ -79,7 +79,7 @@ def get_weather():
             'latitude': latitude,
             'longitude': longitude,
             'current': 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,visibility,uv_index',
-            'hourly': 'temperature_2m,weather_code,precipitation,wind_speed_10m',
+            'hourly': 'temperature_2m,weather_code,precipitation,wind_speed_10m,uv_index',
             'daily': 'temperature_2m_max,temperature_2m_min,weather_code,precipitation_sum,sunrise,sunset,uv_index_max',
             'timezone': 'auto',
             'temperature_unit': 'celsius'
@@ -104,6 +104,7 @@ def get_weather():
         hourly_codes = hourly_data.get('weather_code', [])
         hourly_precip = hourly_data.get('precipitation', [])
         hourly_wind = hourly_data.get('wind_speed_10m', [])
+        hourly_uv = hourly_data.get('uv_index', [])
         
         # Get next 24 hours
         hourly_forecast = []
@@ -112,13 +113,15 @@ def get_weather():
             hour = time.split('T')[1].split(':')[0]  # Extract hour from "2024-01-01T14:00"
             code = hourly_codes[i]
             desc, emj = WEATHER_CODES.get(code, ("Unknown", "❓"))
+            uv_value = hourly_uv[i] if i < len(hourly_uv) and hourly_uv[i] is not None else 'N/A'
             hourly_forecast.append({
                 'time': f"{hour}:00",
                 'temperature': round(hourly_temps[i]),
                 'description': desc,
                 'emoji': emj,
                 'precipitation': round(hourly_precip[i], 1),
-                'wind_speed': round(hourly_wind[i], 1)
+                'wind_speed': round(hourly_wind[i], 1),
+                'uv_index': round(uv_value, 1) if isinstance(uv_value, (int, float)) else uv_value
             })
         
         # Parse daily data (7 days)
